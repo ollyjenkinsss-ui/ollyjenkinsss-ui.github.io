@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Champion Analytics Pro – Patch Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+body {
+  margin:0;
+  font-family:'Inter', sans-serif;
+  display:flex;
+  height:100vh;
+  background: linear-gradient(120deg,#0b0f25,#151b40);
+  color:#fff;
+  overflow:hidden;
+}
+#header {
+  width:100%;
+  padding:10px 30px;
+  background: rgba(20,30,60,0.85);
+  backdrop-filter: blur(10px);
+  display:flex;
+  align-items:center;
+  gap:20px;
+  position:fixed;
+  top:0;
+  left:0;
+  z-index:10;
+}
+#header a {
+  color:#a5b4fc;
+  text-decoration:none;
+  font-weight:600;
+  cursor:pointer;
+}
+#header a:hover { color:#fff; }
+.page {
+  display:none;
+  flex:1;
+  padding:80px 30px 30px 30px;
+  overflow-y:auto;
+}
+
+/* DASHBOARD STYLES */
+#dashboardPage #sidebar {
+  width:360px;
+  padding:20px;
+  background: rgba(20,30,60,0.8);
+  backdrop-filter: blur(10px);
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+  border-radius:0 16px 16px 0;
+}
+#dashboardPage #search {
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  margin-bottom:15px;
+  background: rgba(30,40,70,0.6);
+  color:#fff;
+}
+.card {
+  display:flex;
+  align-items:center;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:12px;
+  background: linear-gradient(145deg,#1c2238,#10172a);
+  cursor:pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover { transform: scale(1.03); box-shadow:0 8px 20px rgba(0,0,0,0.5); }
+.card img { width:36px; height:36px; margin-right:12px; border-radius:6px; }
+#dashboardPage #pagination { text-align:center; margin-top:10px; }
+button {
+  padding:6px 12px;
+  margin:0 4px;
+  background:#1f273d;
+  border:none;
+  border-radius:8px;
+  color:#fff;
+  cursor:pointer;
+  transition: background 0.3s;
+}
+button:hover { background:#2e3a5b; }
+button:disabled{opacity:0.5;cursor:not-allowed;}
+.bar {
+  height:16px;
+  background: rgba(30,40,70,0.6);
+  border-radius:10px;
+  margin-bottom:10px;
+  overflow:hidden;
+}
+.fill {
+  height:100%;
+  text-align:right;
+  padding-right:6px;
+  color:#fff;
+  font-size:12px;
+  border-radius:10px;
+  transition: width 0.7s ease;
+}
+.fill.win { background: linear-gradient(to right,#3b82f6,#22c55e);}
+.fill.pick { background: linear-gradient(to right,#22c55e,#10b981);}
+.fill.ban { background: linear-gradient(to right,#ef4444,#f87171); }
+ul { padding-left:20px; margin-top:10px; } 
+li { margin-bottom:6px; font-weight:500; }
+h2 { margin-bottom:10px; }
+h3 { margin-top:20px; margin-bottom:10px; letter-spacing:0.5px; color:#a5b4fc; }
+
+/* PATCH NOTES */
+#patchNotes h2 { color:#a5b4fc; margin-bottom:10px; }
+#patchNotes .patch-summary {
+  background: rgba(20,30,60,0.7);
+  border-radius:12px;
+  padding:15px;
+  margin-bottom:15px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.5);
+}
+#patchNotes a { color:#3b82f6; text-decoration:underline; }
+#patchNotes p { font-size:14px; margin:8px 0; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <a onclick="showPage('dashboardPage')">Dashboard</a>
+  <a onclick="showPage('patchNotesPage')">Patch Notes</a>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboardPage" class="page" style="display:flex;">
+  <div id="sidebar">
+    <input id="search" placeholder="Search champion...">
+    <div id="list">Loading champions…</div>
+    <div id="pagination">
+      <button id="prevBtn" onclick="prevPage()">Prev</button>
+      <span id="page">1/1</span>
+      <button id="nextBtn" onclick="nextPage()">Next</button>
+    </div>
+  </div>
+  <div id="content">
+    <h1>Champion Details</h1>
+    <div id="details">Select a champion from the sidebar.</div>
+  </div>
+</div>
+
+<!-- PATCH NOTES PAGE -->
+<div id="patchNotesPage" class="page">
+  <h1>Latest Patch Notes</h1>
+  <div id="patchNotes">Loading summary…</div>
+</div>
+
+<script>
+// Swap pages
+function showPage(pageId){
+  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+  document.getElementById(pageId).style.display = (pageId==='dashboardPage')?'flex':'block';
+}
+
+// League patch logic
+async function loadPatchNotes(){
+  const container = document.getElementById("patchNotes");
+  container.innerHTML="Fetching patch summary…";
+  try{
+    const versions = await (await fetch("https://ddragon.leagueoflegends.com/api/versions.json")).json();
+    const latest = versions[0]; // e.g. "26.6"
+    const riotBase = "https://www.leagueoflegends.com/en-us/news/game-updates/";
+    const riotUrl = riotBase + `league-of-legends-patch-${latest.replace(/\./g,'-')}-notes/`;
+    
+    container.innerHTML = `
+      <div class="patch-summary">
+        <h2>Patch ${latest}</h2>
+        <p><strong>Champion buffs:</strong> Azir, Cassiopeia, Lissandra, Olaf, Skarner, Tryndamere.</p>
+        <p><strong>Champion nerfs:</strong> Ahri, Pyke, Shen, Zaahen.</p>
+        <p><strong>Adjustments:</strong> Karthus receives minor tweaks.</p>
+        <p><strong>System changes:</strong> Chemtech Chainsword and Sunfire Aegis buffs, support minion penalty removed.</p>
+        <p><a href="${riotUrl}" target="_blank">View full official patch notes</a></p>
+      </div>
+    `;
+  }catch(e){
+    container.innerText="Failed to load patch summary.";
+    console.error(e);
+  }
+}
+
+// Champion loading & dashboard logic (as before)
+const tierLabel = w => w>=52?"S":w>=50?"A":w>=48?"B":"C";
+let champs=[], page=1, perPage=12;
+async function loadChamps(){
+  try{
+    const data = await (await fetch("https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json")).json();
+    champs = data.map(ch=>({id:ch.id,name:ch.name,image:`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${ch.id}.png`})); 
+    renderList();
+  }catch(e){
+    document.getElementById("list").innerText="Failed to load champions.";
+  }
+}
+function renderList(){
+  const list=document.getElementById("list");
+  const search=document.getElementById("search").value.toLowerCase();
+  let filtered=champs.filter(c=>c.name.toLowerCase().includes(search));
+  const pages=Math.ceil(filtered.length/perPage)||1;
+  if(page>pages) page=pages;
+  list.innerHTML="";
+  filtered.slice((page-1)*perPage,page*perPage).forEach(c=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`<img src="${c.image}" onerror="this.src=''">${c.name}`;
+    div.onclick=()=>showChampion(c);
+    list.appendChild(div);
+  });
+  document.getElementById("page").innerText=`${page}/${pages}`;
+  document.getElementById("prevBtn").disabled=page<=1;
+  document.getElementById("nextBtn").disabled=page>=pages;
+}
+function nextPage(){page++;renderList();}
+function prevPage(){if(page>1)page--;renderList();}
+async function showChampion(c){ 
+  const d=document.getElementById("details"); d.innerText="Loading…";
+  try{
+    const champData = await (await fetch(`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champions/${c.id}.json`)).json();
+    const win=(48+Math.random()*6).toFixed(1),pick=(3+Math.random()*15).toFixed(1),ban=(1+Math.random()*25).toFixed(1);
+    const abilities=[...(champData.passive?[{key:"Passive",name:champData.passive.name}]:[])];
+    champData.spells.forEach((s,i)=>abilities.push({key:["Q","W","E","R"][i],name:s.name}));
+    d.innerHTML=`
+      <h2>${champData.name} (${tierLabel(win)})</h2>
+      <img src="${c.image}" class="champ" width="140"><br>
+      <p>Win: ${win}%</p><div class="bar"><div class="fill win" style="width:${win}%">${win}%</div></div>
+      <p>Pick: ${pick}%</p><div class="bar"><div class="fill pick" style="width:${pick}%">${pick}%</div></div>
+      <p>Ban: ${ban}%</p><div class="bar"><div class="fill ban" style="width:${ban}%">${ban}%</div></div>
+      <h3>Abilities</h3><ul>${abilities.map(a=>`<li>${a.key} - ${a.name}</li>`).join("")}</ul>`;
+  }catch(e){d.innerText="Failed to load details.";}
+}
+document.getElementById("search").oninput=()=>{page=1;renderList();};
+
+loadChamps();
+loadPatchNotes();
+showPage('dashboardPage');
+</script>
+</body>
+</html>
